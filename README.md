@@ -2,6 +2,13 @@
 
 Rust + Tokio multi-exchange WebSocket aggregator with spot/perp unified market model, fee-aware signal filtering, and production-style runtime controls.
 
+![Rust](https://img.shields.io/badge/Rust-2024-000000?logo=rust)
+![Tokio](https://img.shields.io/badge/Runtime-Tokio-333333?logo=rust)
+![Architecture](https://img.shields.io/badge/Architecture-EventBus%20%2B%20Aggregator-1f6feb)
+![Markets](https://img.shields.io/badge/Markets-Spot%20%2B%20Perp-0a7f3f)
+![Interfaces](https://img.shields.io/badge/Output-WebSocket%20%7C%20HTTP%20%7C%20Redis-d97706)
+![Status](https://img.shields.io/badge/Status-Production--style-blue)
+
 ## Architecture
 
 ```mermaid
@@ -25,18 +32,20 @@ flowchart LR
 
 ## Connection Model Matrix
 
-| Exchange | Spot model | Perp model | Notes |
+| Exchange | Spot model | Perp model (this project) | Official perp support | Notes |
 |---|---|---|---|
-| Binance | Single WS, multi-symbol combined stream | N/A (in this project) | `.../stream?streams=` |
-| OKX | Single WS, multi-symbol subscribe | Single WS, multi-symbol subscribe | `tickers` + `-SWAP` mapping |
-| Bybit | Single WS, multi-symbol subscribe | Single WS, multi-symbol subscribe | v5 `spot` / `linear` |
-| Bitget | Single WS, multi-symbol subscribe | Single WS, multi-symbol subscribe | v2 public WS |
-| KuCoin | Single WS, multi-topic subscribe | N/A | tokenized endpoint |
-| Gate | Single WS, multi-symbol subscribe | N/A | v4 `spot.book_ticker` |
-| Coinbase | Single WS, multi-product subscribe | N/A | advanced trade ticker |
-| Kraken | Single WS, multi-symbol subscribe | N/A | ws v2 ticker |
-| HTX | Single WS, multi-channel subscribe | N/A | gzip binary payload |
-| Bitfinex | Single WS, multi-subscribe channels | N/A | `chanId -> symbol` map |
+| Binance | Single WS, multi-symbol combined stream | Not implemented | Yes | `.../stream?streams=` |
+| OKX | Single WS, multi-symbol subscribe | Single WS, multi-symbol subscribe | Yes | `tickers` + `-SWAP` mapping |
+| Bybit | Single WS, multi-symbol subscribe | Single WS, multi-symbol subscribe | Yes | v5 `spot` / `linear` |
+| Bitget | Single WS, multi-symbol subscribe | Single WS, multi-symbol subscribe | Yes | v2 public WS |
+| KuCoin | Single WS, multi-topic subscribe | Not implemented | Yes | tokenized endpoint |
+| Gate | Single WS, multi-symbol subscribe | Not implemented | Yes | v4 `spot.book_ticker` |
+| Coinbase | Single WS, multi-product subscribe | Not implemented | Limited/varies by product line | advanced trade ticker |
+| Kraken | Single WS, multi-symbol subscribe | Not implemented | Yes (derivatives endpoints differ) | ws v2 ticker |
+| HTX | Single WS, multi-channel subscribe | Not implemented | Yes | gzip binary payload |
+| Bitfinex | Single WS, multi-subscribe channels | Not implemented | Yes | `chanId -> symbol` map |
+
+Perp adapters currently enabled in code: `okx_perp`, `bybit_perp`, `bitget_perp`.
 
 ## Signal Fields
 
