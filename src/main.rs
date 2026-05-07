@@ -1,4 +1,5 @@
 mod aggregator;
+mod api;
 mod config;
 mod event_bus;
 mod exchanges;
@@ -7,6 +8,7 @@ mod source;
 mod types;
 
 use aggregator::SpreadAggregator;
+use api::{ApiState, build_router};
 use config::AppConfig;
 use event_bus::EventBus;
 use exchanges::registry::build_sources;
@@ -34,10 +36,26 @@ async fn main() -> anyhow::Result<()> {
 
     let bus = EventBus::new(8192, cfg.runtime.stale_ttl_ms);
 
+    let api_router = build_router(ApiState { bus: bus.clone() });
+    let api_addr = cfg.runtime.api_addr.clone();
+    let api_task = tokio::spawn(async move {
+        let listener = match tokio::net::TcpListener::bind(&api_addr).await {
+            Ok(l) => l,
+            Err(e) => {
+                error!(addr = %api_addr, error = %e, "api bind failed");
+                return;
+            }
+        };
+        info!(addr=%api_addr, "api server started");
+        if let Err(e) = axum::serve(listener, api_router).await {
+            error!(error=%e, "api server failed");
+        }
+    });
+
     let (agg_tx, agg_rx) = mpsc::channel::<DataEvent>(cfg.runtime.queue_capacity);
     let bus_for_router = bus.clone();
     let mut source_rx = handle.rx;
-    let mut router_task = tokio::spawn(async move {
+    let router_task = tokio::spawn(async move {
         while let Some(event) = source_rx.recv().await {
             bus_for_router.publish_from_event(&event).await;
             if agg_tx.send(event).await.is_err() {
@@ -64,6 +82,9 @@ async fn main() -> anyhow::Result<()> {
 
     router_task.abort();
     let _ = router_task.await;
+
+    api_task.abort();
+    let _ = api_task.await;
 
     for t in tasks.drain(..) {
         let _ = t.await;

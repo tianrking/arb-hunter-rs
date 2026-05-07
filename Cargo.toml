@@ -20,3 +20,4 @@ tokio-tungstenite = { version = "0.24", features = ["rustls-tls-webpki-roots"] }
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["fmt", "env-filter"] }
 url = "2"
+axum = { version = "0.7", features = ["ws", "query", "http1", "tokio"] }

@@ -21,6 +21,8 @@ pub struct RuntimeConfig {
     pub backpressure: String,
     pub report_interval_ms: u64,
     pub stale_ttl_ms: u64,
+    #[serde(default = "default_api_addr")]
+    pub api_addr: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -150,6 +152,10 @@ fn normalize_symbols(input: &[String]) -> Vec<String> {
         .map(|s| s.trim().to_ascii_uppercase())
         .filter(|s| !s.is_empty())
         .collect()
+}
+
+fn default_api_addr() -> String {
+    "0.0.0.0:8080".to_string()
 }
 
 #[cfg(test)]
