@@ -3,6 +3,7 @@ mod api;
 mod config;
 mod event_bus;
 mod exchanges;
+mod redis_sink;
 mod runtime;
 mod source;
 mod types;
@@ -12,6 +13,7 @@ use api::{ApiState, build_router};
 use config::AppConfig;
 use event_bus::EventBus;
 use exchanges::registry::build_sources;
+use redis_sink::spawn_redis_sink;
 use runtime::SourceRuntime;
 use tokio::sync::mpsc;
 use tracing::{error, info};
@@ -52,6 +54,12 @@ async fn main() -> anyhow::Result<()> {
         }
     });
 
+    let redis_task = cfg
+        .runtime
+        .redis_url
+        .clone()
+        .map(|url| spawn_redis_sink(bus.clone(), url, cfg.runtime.redis_stream_prefix.clone()));
+
     let (agg_tx, agg_rx) = mpsc::channel::<DataEvent>(cfg.runtime.queue_capacity);
     let bus_for_router = bus.clone();
     let mut source_rx = handle.rx;
@@ -85,6 +93,11 @@ async fn main() -> anyhow::Result<()> {
 
     api_task.abort();
     let _ = api_task.await;
+
+    if let Some(redis_task) = redis_task {
+        redis_task.abort();
+        let _ = redis_task.await;
+    }
 
     for t in tasks.drain(..) {
         let _ = t.await;

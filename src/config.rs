@@ -23,6 +23,10 @@ pub struct RuntimeConfig {
     pub stale_ttl_ms: u64,
     #[serde(default = "default_api_addr")]
     pub api_addr: String,
+    #[serde(default)]
+    pub redis_url: Option<String>,
+    #[serde(default = "default_redis_stream_prefix")]
+    pub redis_stream_prefix: String,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -156,6 +160,10 @@ fn normalize_symbols(input: &[String]) -> Vec<String> {
 
 fn default_api_addr() -> String {
     "0.0.0.0:8080".to_string()
+}
+
+fn default_redis_stream_prefix() -> String {
+    "ticks".to_string()
 }
 
 #[cfg(test)]
