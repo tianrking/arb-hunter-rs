@@ -12,15 +12,20 @@ use tokio::time::interval;
 use tracing::warn;
 
 use crate::event_bus::{EventBus, NormalizedTick};
+use crate::metrics::AppMetrics;
 
 #[derive(Clone)]
 pub struct ApiState {
     pub bus: EventBus,
+    pub metrics: Arc<AppMetrics>,
 }
 
 pub fn build_router(state: ApiState) -> Router {
     Router::new()
         .route("/ws/ticks", get(ws_ticks))
+        .route("/health", get(health))
+        .route("/snapshot", get(snapshot))
+        .route("/metrics", get(metrics))
         .route("/", get(|| async { Json(serde_json::json!({"service":"arb-hunter-rs"})) }))
         .with_state(Arc::new(state))
 }
@@ -32,15 +37,44 @@ pub struct TickFilterQuery {
     pub market: Option<String>,
 }
 
+#[derive(Debug, Deserialize, Default)]
+struct SnapshotQuery {
+    symbol: Option<String>,
+}
+
+async fn health() -> impl IntoResponse {
+    Json(serde_json::json!({"ok": true}))
+}
+
+async fn snapshot(
+    State(state): State<Arc<ApiState>>,
+    Query(q): Query<SnapshotQuery>,
+) -> impl IntoResponse {
+    let data = if let Some(sym) = q.symbol {
+        state.bus.snapshot_by_symbol(&sym).await
+    } else {
+        state.bus.snapshot_all().await
+    };
+    Json(data)
+}
+
+async fn metrics(State(state): State<Arc<ApiState>>) -> impl IntoResponse {
+    state.metrics.render()
+}
+
 async fn ws_ticks(
     ws: WebSocketUpgrade,
     State(state): State<Arc<ApiState>>,
     Query(q): Query<TickFilterQuery>,
 ) -> impl IntoResponse {
-    { let bus = state.bus.clone(); ws.on_upgrade(move |socket| ws_loop(socket, bus, q)) }
+    let bus = state.bus.clone();
+    let metrics = state.metrics.clone();
+    ws.on_upgrade(move |socket| ws_loop(socket, bus, q, metrics))
 }
 
-async fn ws_loop(mut socket: WebSocket, bus: EventBus, q: TickFilterQuery) {
+async fn ws_loop(mut socket: WebSocket, bus: EventBus, q: TickFilterQuery, metrics: Arc<AppMetrics>) {
+    metrics.ws_subscribers.inc();
+
     let mut rx = bus.subscribe();
     let filter = TickFilter::from_query(q);
     let mut hb = interval(Duration::from_secs(15));
@@ -86,6 +120,8 @@ async fn ws_loop(mut socket: WebSocket, bus: EventBus, q: TickFilterQuery) {
             }
         }
     }
+
+    metrics.ws_subscribers.dec();
 }
 
 #[derive(Default)]

@@ -1,12 +1,18 @@
+use std::sync::Arc;
 use std::time::Duration;
-
 
 use tokio::task::JoinHandle;
 use tracing::{error, info, warn};
 
 use crate::event_bus::EventBus;
+use crate::metrics::AppMetrics;
 
-pub fn spawn_redis_sink(bus: EventBus, redis_url: String, stream_prefix: String) -> JoinHandle<()> {
+pub fn spawn_redis_sink(
+    bus: EventBus,
+    redis_url: String,
+    stream_prefix: String,
+    metrics: Arc<AppMetrics>,
+) -> JoinHandle<()> {
     tokio::spawn(async move {
         let mut rx = bus.subscribe();
 
@@ -50,6 +56,7 @@ pub fn spawn_redis_sink(bus: EventBus, redis_url: String, stream_prefix: String)
                             .await;
                         match res {
                             Ok(_) => {
+                                metrics.redis_xadd_total.inc();
                                 wrote = true;
                                 break;
                             }
