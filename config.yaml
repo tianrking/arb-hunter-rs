@@ -1,0 +1,145 @@
+# arb-hunter-rs unified configuration
+# Use with: ARB_CONFIG=./config.yaml cargo run
+
+runtime:
+  # mpsc channel capacity between source tasks and aggregator.
+  # Higher value handles bursts better, but uses more memory.
+  queue_capacity: 4096
+
+  # Backpressure strategy when channel is full:
+  # - drop_newest: low-latency priority, may drop some fresh ticks
+  # - block: no drop, but producers may stall
+  backpressure: drop_newest
+
+  # Report cadence for aggregated output (milliseconds).
+  # Ingest remains high-frequency; only output is throttled.
+  report_interval_ms: 1000
+
+  # Quote freshness TTL (milliseconds).
+  # Quotes older than this are excluded from spread calculation.
+  stale_ttl_ms: 1500
+
+strategy:
+  # Minimum net profit in quote currency (e.g., USDT) after fees/slippage.
+  min_profit_usdt: 1.0
+
+  # Minimum net spread in basis points after fees/slippage.
+  # 1 bps = 0.01%
+  min_profit_bps: 0.5
+
+  # Opportunity must stay valid for at least this long before TRIGGER.
+  # Helps avoid noisy one-tick false positives.
+  min_signal_hold_ms: 500
+
+  # Slippage buffer (bps) applied to both legs (buy + sell).
+  # Conservative default for live trading realism.
+  slippage_bps: 0.5
+
+# Global default symbol list (used when exchange.symbols is omitted).
+# Format should be normalized symbols, e.g. BTCUSDT, ETHUSDT.
+symbols: [BTCUSDT, ETHUSDT]
+
+# Global default perp symbol list (used when exchange.perp_symbols is omitted).
+perp_symbols: [BTCUSDT, ETHUSDT]
+
+exchanges:
+  okx:
+    # Enable/disable this exchange source.
+    enabled: true
+
+    # Optional per-exchange symbol override.
+    # If omitted, global "symbols" is used.
+    symbols: [BTCUSDT, ETHUSDT]
+
+    fee:
+      # Fee model:
+      # - fixed: one maker/taker fee level
+      # - tiered: select fee by 30d volume and tiers
+      mode: tiered
+
+      # Your account's rolling 30d volume (USDT), used to select tier.
+      volume_30d_usdt: 5000000
+
+      # Fee tiers (bps). System picks the highest tier where
+      # volume_30d_usdt >= min_volume_usdt.
+      tiers:
+        - min_volume_usdt: 0
+          maker_bps: 8.0
+          taker_bps: 10.0
+        - min_volume_usdt: 1000000
+          maker_bps: 6.0
+          taker_bps: 8.0
+        - min_volume_usdt: 5000000
+          maker_bps: 4.0
+          taker_bps: 6.0
+
+  bitget:
+    enabled: true
+    # Optional perp override for this exchange
+    perp_symbols: [BTCUSDT, ETHUSDT]
+    symbols: [BTCUSDT, ETHUSDT]
+    fee:
+      mode: fixed
+      # Fixed fee level (bps) for your account.
+      maker_bps: 8.0
+      taker_bps: 10.0
+
+  binance:
+    enabled: false
+    fee:
+      mode: fixed
+      maker_bps: 7.5
+      taker_bps: 7.5
+
+  bybit:
+    enabled: true
+    # Optional perp override for this exchange
+    perp_symbols: [BTCUSDT, ETHUSDT]
+    symbols: [BTCUSDT, ETHUSDT]
+    fee:
+      mode: fixed
+      maker_bps: 10.0
+      taker_bps: 10.0
+
+  coinbase:
+    enabled: false
+    fee:
+      mode: fixed
+      maker_bps: 40.0
+      taker_bps: 60.0
+
+  kraken:
+    enabled: false
+    fee:
+      mode: fixed
+      maker_bps: 25.0
+      taker_bps: 40.0
+
+  htx:
+    enabled: false
+    fee:
+      mode: fixed
+      maker_bps: 20.0
+      taker_bps: 20.0
+
+  kucoin:
+    enabled: true
+    symbols: [BTCUSDT, ETHUSDT]
+    fee:
+      mode: fixed
+      maker_bps: 10.0
+      taker_bps: 10.0
+
+  gate:
+    enabled: false
+    fee:
+      mode: fixed
+      maker_bps: 15.0
+      taker_bps: 15.0
+
+  bitfinex:
+    enabled: false
+    fee:
+      mode: fixed
+      maker_bps: 10.0
+      taker_bps: 20.0

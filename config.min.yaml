@@ -1,0 +1,31 @@
+# Minimal config: edit only these fields first.
+
+runtime:
+  queue_capacity: 4096
+  backpressure: drop_newest
+  report_interval_ms: 1000
+  stale_ttl_ms: 1500
+
+strategy:
+  # Relaxed thresholds for quick testing (easier to see TRIGGER)
+  min_profit_usdt: -1000.0
+  min_profit_bps: -100.0
+  min_signal_hold_ms: 0
+  slippage_bps: 0.0
+
+symbols: [BTCUSDT]
+
+exchanges:
+  okx:
+    enabled: true
+    fee:
+      mode: fixed
+      maker_bps: 0.0
+      taker_bps: 0.0
+
+  bitget:
+    enabled: true
+    fee:
+      mode: fixed
+      maker_bps: 0.0
+      taker_bps: 0.0
