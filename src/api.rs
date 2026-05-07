@@ -170,3 +170,46 @@ fn parse_csv_set_lower(s: String) -> HashSet<String> {
         .filter(|x| !x.is_empty())
         .collect()
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn sample_tick() -> NormalizedTick {
+        NormalizedTick {
+            version: "v1",
+            exchange: "okx",
+            market: "spot",
+            symbol: "BTCUSDT".to_string(),
+            bid: 1.0,
+            ask: 2.0,
+            mark: None,
+            funding: None,
+            ts: 1,
+            source_latency_ms: 0,
+            stale: false,
+        }
+    }
+
+    #[test]
+    fn filter_matches_symbol_exchange_market() {
+        let q = TickFilterQuery {
+            symbols: Some("BTCUSDT".to_string()),
+            exchanges: Some("okx".to_string()),
+            market: Some("spot".to_string()),
+        };
+        let f = TickFilter::from_query(q);
+        assert!(f.matches(&sample_tick()));
+    }
+
+    #[test]
+    fn filter_rejects_other_symbol() {
+        let q = TickFilterQuery {
+            symbols: Some("ETHUSDT".to_string()),
+            exchanges: None,
+            market: None,
+        };
+        let f = TickFilter::from_query(q);
+        assert!(!f.matches(&sample_tick()));
+    }
+}

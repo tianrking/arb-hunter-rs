@@ -97,3 +97,32 @@ fn market_to_str(m: MarketKind) -> &'static str {
 fn snapshot_key(exchange: &str, market: &str, symbol: &str) -> String {
     format!("{exchange}:{market}:{symbol}")
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::types::{DataEvent, MarketKind, MarketTick};
+
+    #[tokio::test]
+    async fn publish_builds_normalized_tick() {
+        let bus = EventBus::new(16, 1000);
+        let tick = MarketTick {
+            exchange: "okx",
+            market: MarketKind::Spot,
+            symbol: "BTCUSDT".into(),
+            bid: 1.0,
+            ask: 2.0,
+            mark: None,
+            funding_rate: None,
+            ts_ms: now_ms(),
+        };
+        bus.publish_from_event(&DataEvent::Tick(tick)).await;
+        let all = bus.snapshot_all().await;
+        assert_eq!(all.len(), 1);
+        let t = &all[0];
+        assert_eq!(t.exchange, "okx");
+        assert_eq!(t.market, "spot");
+        assert_eq!(t.symbol, "BTCUSDT");
+        assert!(t.source_latency_ms <= 1000);
+    }
+}
