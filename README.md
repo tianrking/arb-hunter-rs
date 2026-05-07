@@ -73,6 +73,27 @@ Default config file is `config.yaml`.
 ARB_CONFIG=./config.yaml cargo run
 ```
 
+Full-exchange example (all implemented adapters enabled):
+
+```bash
+ARB_CONFIG=./config.all-exchanges.example.yaml cargo run
+```
+
+## Bring-Up Guide
+
+Recommended staged validation order:
+
+1. Single exchange spot: enable only one spot exchange (`binance` or `okx`) and confirm stable `freq` output.
+2. Single exchange perp: enable one perp-capable exchange and verify `market=Perp` plus `mark/funding` fields.
+3. Two-exchange cross check: pair `okx + bybit` or `okx + bitget` first.
+4. Full fan-in: switch to `config.all-exchanges.example.yaml`.
+
+Practical notes:
+
+- If some exchanges are region-restricted, keep `enabled: false` for those venues.
+- Kraken perp symbols are pass-through in this codebase; set exact venue symbols in `perp_symbols`.
+- Coinbase in this project is currently spot-only.
+
 ## Testing
 
 Run all tests:

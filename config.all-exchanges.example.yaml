@@ -1,0 +1,94 @@
+# Full-exchange example config for arb-hunter-rs
+# Usage:
+#   ARB_CONFIG=./config.all-exchanges.example.yaml cargo run
+#
+# Note:
+# - This file enables all currently implemented exchanges in this project.
+# - Coinbase is spot-only in this project (no perp adapter yet).
+# - Kraken perp symbol naming is venue-specific; adjust perp_symbols to your account/venue.
+
+runtime:
+  queue_capacity: 8192
+  backpressure: drop_newest
+  report_interval_ms: 1000
+  stale_ttl_ms: 2000
+  api_addr: 0.0.0.0:8080
+  # redis_url: redis://127.0.0.1:6379
+  redis_stream_prefix: ticks
+
+strategy:
+  min_profit_usdt: 1.0
+  min_profit_bps: 0.5
+  min_signal_hold_ms: 500
+  slippage_bps: 0.5
+
+# Global defaults (spot/perp), can be overridden per exchange below.
+symbols: [BTCUSDT, ETHUSDT]
+perp_symbols: [BTCUSDT, ETHUSDT]
+
+exchanges:
+  binance:
+    enabled: true
+    symbols: [BTCUSDT, ETHUSDT]
+    perp_symbols: [BTCUSDT, ETHUSDT]
+    fee: { mode: fixed, maker_bps: 7.5, taker_bps: 7.5 }
+
+  okx:
+    enabled: true
+    symbols: [BTCUSDT, ETHUSDT]
+    perp_symbols: [BTCUSDT, ETHUSDT]
+    fee: { mode: fixed, maker_bps: 4.0, taker_bps: 6.0 }
+
+  bybit:
+    enabled: true
+    symbols: [BTCUSDT, ETHUSDT]
+    perp_symbols: [BTCUSDT, ETHUSDT]
+    fee: { mode: fixed, maker_bps: 10.0, taker_bps: 10.0 }
+
+  bitget:
+    enabled: true
+    symbols: [BTCUSDT, ETHUSDT]
+    perp_symbols: [BTCUSDT, ETHUSDT]
+    fee: { mode: fixed, maker_bps: 8.0, taker_bps: 10.0 }
+
+  kucoin:
+    enabled: true
+    symbols: [BTCUSDT, ETHUSDT]
+    # Registry converts BTCUSDT -> BTCUSDTM for perp.
+    perp_symbols: [BTCUSDT, ETHUSDT]
+    fee: { mode: fixed, maker_bps: 10.0, taker_bps: 10.0 }
+
+  gate:
+    enabled: true
+    symbols: [BTCUSDT, ETHUSDT]
+    # Registry converts BTCUSDT -> BTC_USDT for perp.
+    perp_symbols: [BTCUSDT, ETHUSDT]
+    fee: { mode: fixed, maker_bps: 15.0, taker_bps: 15.0 }
+
+  kraken:
+    enabled: true
+    symbols: [BTCUSDT, ETHUSDT]
+    # Kraken perp uses pass-through symbols in this project.
+    # Replace with exact tradable symbols for your venue if needed.
+    perp_symbols: [BTCUSDT, ETHUSDT]
+    fee: { mode: fixed, maker_bps: 25.0, taker_bps: 40.0 }
+
+  htx:
+    enabled: true
+    symbols: [BTCUSDT, ETHUSDT]
+    # Registry converts BTCUSDT -> BTC-USDT for perp.
+    perp_symbols: [BTCUSDT, ETHUSDT]
+    fee: { mode: fixed, maker_bps: 20.0, taker_bps: 20.0 }
+
+  bitfinex:
+    enabled: true
+    symbols: [BTCUSDT, ETHUSDT]
+    # Registry converts BTCUSDT -> tBTCF0:USDTF0 for perp.
+    perp_symbols: [BTCUSDT, ETHUSDT]
+    fee: { mode: fixed, maker_bps: 10.0, taker_bps: 20.0 }
+
+  coinbase:
+    enabled: true
+    symbols: [BTCUSDT, ETHUSDT]
+    # Perp not implemented in this project.
+    fee: { mode: fixed, maker_bps: 40.0, taker_bps: 60.0 }
