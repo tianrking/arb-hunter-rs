@@ -51,6 +51,8 @@ struct BitgetTick {
     mark: Option<String>,
     #[serde(rename = "fundingRate")]
     funding: Option<String>,
+    #[serde(rename = "ts")]
+    ts: Option<String>,
 }
 
 #[async_trait]
@@ -111,6 +113,7 @@ impl ExchangeSource for BitgetPerpTicker {
                                         &d.ask,
                                         d.mark.as_deref(),
                                         d.funding.as_deref(),
+                                        d.ts.as_deref().and_then(|x| x.parse::<u64>().ok()),
                                     )
                                     .await?;
                                 }

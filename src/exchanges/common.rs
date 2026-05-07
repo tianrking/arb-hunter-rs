@@ -12,7 +12,7 @@ pub async fn emit_tick(
     bid: &str,
     ask: &str,
 ) -> Result<()> {
-    emit_tick_ext(ctx, exchange, market, symbol, bid, ask, None, None).await
+    emit_tick_ext(ctx, exchange, market, symbol, bid, ask, None, None, None).await
 }
 
 pub async fn emit_tick_ext(
@@ -24,6 +24,7 @@ pub async fn emit_tick_ext(
     ask: &str,
     mark: Option<&str>,
     funding_rate: Option<&str>,
+    source_ts_ms: Option<u64>,
 ) -> Result<()> {
     let parsed_bid = bid.parse::<f64>();
     let parsed_ask = ask.parse::<f64>();
@@ -39,7 +40,7 @@ pub async fn emit_tick_ext(
             ask,
             mark,
             funding_rate,
-            ts_ms: now_ms(),
+            ts_ms: source_ts_ms.unwrap_or_else(now_ms),
         };
         ctx.emit(DataEvent::Tick(tick)).await?;
     } else {

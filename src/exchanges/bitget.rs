@@ -8,7 +8,7 @@ use serde_json::json;
 use tokio::time::{Instant, interval};
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 
-use crate::exchanges::common::emit_tick;
+use crate::exchanges::common::emit_tick_ext;
 use crate::source::{ExchangeSource, SourceContext};
 use crate::types::{DataEvent, MarketKind, now_ms};
 
@@ -47,6 +47,8 @@ struct BitgetTick {
     ask: String,
     #[serde(rename = "instId")]
     inst_id: Option<String>,
+    #[serde(rename = "ts")]
+    ts: Option<String>,
 }
 
 #[async_trait]
@@ -98,7 +100,18 @@ impl ExchangeSource for BitgetSpotTicker {
                                 let arg_inst = m.arg.and_then(|a| a.inst_id);
                                 for d in m.data {
                                     let symbol = d.inst_id.as_deref().or(arg_inst.as_deref()).unwrap_or("UNKNOWN");
-                                    emit_tick(&ctx, self.name(), MarketKind::Spot, symbol, &d.bid, &d.ask).await?;
+                                    emit_tick_ext(
+                                        &ctx,
+                                        self.name(),
+                                        MarketKind::Spot,
+                                        symbol,
+                                        &d.bid,
+                                        &d.ask,
+                                        None,
+                                        None,
+                                        d.ts.as_deref().and_then(|x| x.parse::<u64>().ok()),
+                                    )
+                                    .await?;
                                 }
                             }
                             last_seen = Instant::now();

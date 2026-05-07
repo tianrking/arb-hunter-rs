@@ -8,16 +8,19 @@ use serde_json::json;
 use tokio::time::{Instant, interval};
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 
-use crate::exchanges::common::emit_tick;
 use crate::source::{ExchangeSource, SourceContext};
 use crate::types::{DataEvent, MarketKind, now_ms};
 
 pub struct KucoinTicker {
     pub symbols: Vec<String>,
+    client: reqwest::Client,
 }
 impl KucoinTicker {
     pub fn new(symbols: Vec<String>) -> Self {
-        Self { symbols }
+        Self {
+            symbols,
+            client: reqwest::Client::new(),
+        }
     }
 }
 
@@ -52,6 +55,8 @@ struct KuTickData {
     bid: Option<String>,
     #[serde(rename = "bestAsk")]
     ask: Option<String>,
+    #[serde(rename = "time")]
+    ts: Option<u64>,
 }
 
 #[async_trait]
@@ -65,8 +70,8 @@ impl ExchangeSource for KucoinTicker {
             anyhow::bail!("kucoin symbols empty");
         }
 
-        let client = reqwest::Client::new();
-        let bullet = client
+        let bullet = self
+            .client
             .post("https://api.kucoin.com/api/v1/bullet-public")
             .send()
             .await?
@@ -122,7 +127,17 @@ impl ExchangeSource for KucoinTicker {
                                 if let (Some(topic), Some(data)) = (v.topic.as_deref(), v.data)
                                     && let (Some(bid), Some(ask)) = (data.bid.as_deref(), data.ask.as_deref()) {
                                     let symbol = topic.split(':').nth(1).unwrap_or("UNKNOWN");
-                                    emit_tick(&ctx, self.name(), MarketKind::Spot, symbol, bid, ask).await?;
+                                    crate::exchanges::common::emit_tick_ext(
+                                        &ctx,
+                                        self.name(),
+                                        MarketKind::Spot,
+                                        symbol,
+                                        bid,
+                                        ask,
+                                        None,
+                                        None,
+                                        data.ts.map(|x| if x > 10_000_000_000_000 { x / 1_000_000 } else { x }),
+                                    ).await?;
                                 }
                             }
                         }

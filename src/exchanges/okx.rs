@@ -7,7 +7,7 @@ use serde::{Deserialize, Serialize};
 use tokio::time::{Instant, interval};
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 
-use crate::exchanges::common::emit_tick;
+use crate::exchanges::common::emit_tick_ext;
 use crate::source::{ExchangeSource, SourceContext};
 use crate::types::{DataEvent, MarketKind, now_ms};
 
@@ -50,6 +50,8 @@ struct Tick<'a> {
     bid: &'a str,
     #[serde(borrow, rename = "askPx")]
     ask: &'a str,
+    #[serde(borrow, rename = "ts")]
+    ts: Option<&'a str>,
 }
 
 #[async_trait]
@@ -96,7 +98,17 @@ impl ExchangeSource for OkxTicker {
                             if let Ok(parsed) = serde_json::from_str::<Msg<'_>>(&t)
                                 && let Some(first) = parsed.data.first()
                                 && let Some(arg) = parsed.arg {
-                                emit_tick(&ctx, self.name(), MarketKind::Spot, arg.inst_id, first.bid, first.ask).await?;
+                                emit_tick_ext(
+                                    &ctx,
+                                    self.name(),
+                                    MarketKind::Spot,
+                                    arg.inst_id,
+                                    first.bid,
+                                    first.ask,
+                                    None,
+                                    None,
+                                    first.ts.and_then(|x| x.parse::<u64>().ok()),
+                                ).await?;
                             }
                         }
                         Message::Pong(_) => last_pong = Instant::now(),

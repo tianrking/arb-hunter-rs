@@ -8,7 +8,7 @@ use serde_json::json;
 use tokio::time::{Instant, interval};
 use tokio_tungstenite::{connect_async, tungstenite::Message};
 
-use crate::exchanges::common::emit_tick;
+use crate::exchanges::common::emit_tick_ext;
 use crate::source::{ExchangeSource, SourceContext};
 use crate::types::{DataEvent, MarketKind, now_ms};
 
@@ -39,6 +39,8 @@ struct BybitTickData {
     bid: String,
     #[serde(rename = "ask1Price")]
     ask: String,
+    #[serde(rename = "ts")]
+    ts: Option<u64>,
 }
 
 #[async_trait]
@@ -84,7 +86,17 @@ impl ExchangeSource for BybitSpotTicker {
                                     continue;
                                 }
                                 if let Some(d) = m.data {
-                                    emit_tick(&ctx, self.name(), MarketKind::Spot, &d.symbol, &d.bid, &d.ask).await?;
+                                    emit_tick_ext(
+                                        &ctx,
+                                        self.name(),
+                                        MarketKind::Spot,
+                                        &d.symbol,
+                                        &d.bid,
+                                        &d.ask,
+                                        None,
+                                        None,
+                                        d.ts,
+                                    ).await?;
                                 }
                             }
                         }

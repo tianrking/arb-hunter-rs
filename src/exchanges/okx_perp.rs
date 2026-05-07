@@ -54,6 +54,8 @@ struct Tick<'a> {
     mark: Option<&'a str>,
     #[serde(borrow, default, rename = "fundingRate")]
     funding: Option<&'a str>,
+    #[serde(borrow, default, rename = "ts")]
+    ts: Option<&'a str>,
 }
 
 #[async_trait]
@@ -101,7 +103,17 @@ impl ExchangeSource for OkxPerpTicker {
                             if let Ok(parsed) = serde_json::from_str::<Msg<'_>>(&t)
                                 && let Some(first) = parsed.data.first()
                                 && let Some(arg) = parsed.arg {
-                                emit_tick_ext(&ctx, self.name(), MarketKind::Perp, arg.inst_id, first.bid, first.ask, first.mark, first.funding).await?;
+                                emit_tick_ext(
+                                    &ctx,
+                                    self.name(),
+                                    MarketKind::Perp,
+                                    arg.inst_id,
+                                    first.bid,
+                                    first.ask,
+                                    first.mark,
+                                    first.funding,
+                                    first.ts.and_then(|x| x.parse::<u64>().ok()),
+                                ).await?;
                             }
                         }
                         Message::Pong(_) => last_pong = Instant::now(),

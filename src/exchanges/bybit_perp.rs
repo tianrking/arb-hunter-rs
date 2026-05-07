@@ -43,6 +43,8 @@ struct BybitPerpData {
     mark: Option<String>,
     #[serde(rename = "fundingRate")]
     funding: Option<String>,
+    #[serde(rename = "ts")]
+    ts: Option<u64>,
 }
 
 #[async_trait]
@@ -97,6 +99,7 @@ impl ExchangeSource for BybitPerpTicker {
                                         &d.ask,
                                         d.mark.as_deref(),
                                         d.funding.as_deref(),
+                                        d.ts,
                                     )
                                     .await?;
                                 }

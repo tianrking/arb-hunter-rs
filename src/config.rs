@@ -18,7 +18,7 @@ pub struct AppConfig {
 #[derive(Debug, Clone, Deserialize)]
 pub struct RuntimeConfig {
     pub queue_capacity: usize,
-    pub backpressure: String,
+    pub backpressure: BackpressureConfig,
     pub report_interval_ms: u64,
     pub stale_ttl_ms: u64,
     #[serde(default = "default_api_addr")]
@@ -27,6 +27,13 @@ pub struct RuntimeConfig {
     pub redis_url: Option<String>,
     #[serde(default = "default_redis_stream_prefix")]
     pub redis_stream_prefix: String,
+}
+
+#[derive(Debug, Clone, Copy, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum BackpressureConfig {
+    Block,
+    DropNewest,
 }
 
 #[derive(Debug, Clone, Deserialize)]
@@ -91,9 +98,9 @@ impl AppConfig {
     }
 
     pub fn backpressure_mode(&self) -> BackpressureMode {
-        match self.runtime.backpressure.as_str() {
-            "block" => BackpressureMode::Block,
-            _ => BackpressureMode::DropNewest,
+        match self.runtime.backpressure {
+            BackpressureConfig::Block => BackpressureMode::Block,
+            BackpressureConfig::DropNewest => BackpressureMode::DropNewest,
         }
     }
 

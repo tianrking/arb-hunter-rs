@@ -5,6 +5,7 @@ mod event_bus;
 mod exchanges;
 mod metrics;
 mod redis_sink;
+mod router;
 mod runtime;
 mod source;
 mod types;
@@ -16,6 +17,7 @@ use event_bus::EventBus;
 use exchanges::registry::build_sources;
 use metrics::AppMetrics;
 use redis_sink::spawn_redis_sink;
+use router::EventRouter;
 use runtime::SourceRuntime;
 use tokio::sync::mpsc;
 use tracing::{error, info};
@@ -70,23 +72,8 @@ async fn main() -> anyhow::Result<()> {
     });
 
     let (agg_tx, agg_rx) = mpsc::channel::<DataEvent>(cfg.runtime.queue_capacity);
-    let bus_for_router = bus.clone();
-    let metrics_for_router = metrics.clone();
-    let mut source_rx = handle.rx;
-    let router_task = tokio::spawn(async move {
-        while let Some(event) = source_rx.recv().await {
-            if matches!(&event, DataEvent::Tick(_)) {
-                metrics_for_router.ticks_ingested_total.inc();
-            }
-            bus_for_router.publish_from_event(&event).await;
-            if matches!(&event, DataEvent::Tick(_)) {
-                metrics_for_router.bus_publish_total.inc();
-            }
-            if agg_tx.send(event).await.is_err() {
-                break;
-            }
-        }
-    });
+    let router = EventRouter::new(handle.rx, agg_tx, bus.clone(), metrics.clone());
+    let router_task = tokio::spawn(router.run());
 
     let mut agg_task = tokio::spawn(SpreadAggregator::from_config(&cfg).run(agg_rx));
 
