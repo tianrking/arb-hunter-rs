@@ -16,7 +16,9 @@ pub struct BybitPerpTicker {
     pub symbols: Vec<String>,
 }
 impl BybitPerpTicker {
-    pub fn new(symbols: Vec<String>) -> Self { Self { symbols } }
+    pub fn new(symbols: Vec<String>) -> Self {
+        Self { symbols }
+    }
 }
 
 #[derive(Deserialize)]
@@ -45,7 +47,9 @@ struct BybitPerpData {
 
 #[async_trait]
 impl ExchangeSource for BybitPerpTicker {
-    fn name(&self) -> &'static str { "bybit" }
+    fn name(&self) -> &'static str {
+        "bybit"
+    }
 
     async fn run(&self, ctx: SourceContext) -> Result<()> {
         if self.symbols.is_empty() {
@@ -60,7 +64,10 @@ impl ExchangeSource for BybitPerpTicker {
             .iter()
             .map(|s| format!("tickers.{}", s))
             .collect::<Vec<_>>();
-        sink.send(Message::Text(json!({"op":"subscribe","args":topics}).to_string().into())).await?;
+        sink.send(Message::Text(
+            json!({"op":"subscribe","args":topics}).to_string().into(),
+        ))
+        .await?;
 
         let mut ping_tick = interval(Duration::from_secs(20));
         let mut last_pong = Instant::now();

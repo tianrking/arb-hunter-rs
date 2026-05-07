@@ -16,7 +16,9 @@ pub struct KrakenTicker {
     pub symbols: Vec<String>,
 }
 impl KrakenTicker {
-    pub fn new(symbols: Vec<String>) -> Self { Self { symbols } }
+    pub fn new(symbols: Vec<String>) -> Self {
+        Self { symbols }
+    }
 }
 
 #[derive(Deserialize)]
@@ -41,7 +43,9 @@ struct KData {
 
 #[async_trait]
 impl ExchangeSource for KrakenTicker {
-    fn name(&self) -> &'static str { "kraken" }
+    fn name(&self) -> &'static str {
+        "kraken"
+    }
 
     async fn run(&self, ctx: SourceContext) -> Result<()> {
         if self.symbols.is_empty() {

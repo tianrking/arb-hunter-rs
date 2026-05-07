@@ -21,10 +21,7 @@ pub struct MarketTick {
 #[derive(Debug, Clone)]
 pub enum DataEvent {
     Tick(MarketTick),
-    Heartbeat {
-        exchange: &'static str,
-        ts_ms: u64,
-    },
+    Heartbeat { exchange: &'static str, ts_ms: u64 },
 }
 
 #[derive(Debug, Clone, Copy)]

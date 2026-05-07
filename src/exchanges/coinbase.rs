@@ -16,7 +16,9 @@ pub struct CoinbaseTicker {
     pub product_ids: Vec<String>,
 }
 impl CoinbaseTicker {
-    pub fn new(product_ids: Vec<String>) -> Self { Self { product_ids } }
+    pub fn new(product_ids: Vec<String>) -> Self {
+        Self { product_ids }
+    }
 }
 
 #[derive(Deserialize)]
@@ -51,7 +53,9 @@ struct CbTicker {
 
 #[async_trait]
 impl ExchangeSource for CoinbaseTicker {
-    fn name(&self) -> &'static str { "coinbase" }
+    fn name(&self) -> &'static str {
+        "coinbase"
+    }
 
     async fn run(&self, ctx: SourceContext) -> Result<()> {
         if self.product_ids.is_empty() {
@@ -61,11 +65,16 @@ impl ExchangeSource for CoinbaseTicker {
         let (ws, _) = connect_async("wss://advanced-trade-ws.coinbase.com").await?;
         let (mut sink, mut stream) = ws.split();
 
-        sink.send(Message::Text(json!({
-            "type":"subscribe",
-            "channel":"ticker",
-            "product_ids": self.product_ids
-        }).to_string().into())).await?;
+        sink.send(Message::Text(
+            json!({
+                "type":"subscribe",
+                "channel":"ticker",
+                "product_ids": self.product_ids
+            })
+            .to_string()
+            .into(),
+        ))
+        .await?;
 
         let mut ping_tick = interval(Duration::from_secs(20));
         let mut last_pong = Instant::now();

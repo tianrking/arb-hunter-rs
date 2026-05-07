@@ -15,7 +15,9 @@ pub struct OkxTicker {
     pub inst_ids: Vec<String>,
 }
 impl OkxTicker {
-    pub fn new(inst_ids: Vec<String>) -> Self { Self { inst_ids } }
+    pub fn new(inst_ids: Vec<String>) -> Self {
+        Self { inst_ids }
+    }
 }
 
 #[derive(Serialize)]
@@ -52,7 +54,9 @@ struct Tick<'a> {
 
 #[async_trait]
 impl ExchangeSource for OkxTicker {
-    fn name(&self) -> &'static str { "okx" }
+    fn name(&self) -> &'static str {
+        "okx"
+    }
     async fn run(&self, ctx: SourceContext) -> Result<()> {
         if self.inst_ids.is_empty() {
             anyhow::bail!("okx spot symbols empty");

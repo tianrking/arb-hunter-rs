@@ -49,14 +49,18 @@ struct BinanceBookTickerMsg<'a> {
 
 #[async_trait]
 impl ExchangeSource for BinanceBookTicker {
-    fn name(&self) -> &'static str { "binance" }
+    fn name(&self) -> &'static str {
+        "binance"
+    }
 
     async fn run(&self, ctx: SourceContext) -> Result<()> {
         if self.symbols.is_empty() {
             anyhow::bail!("binance symbols empty");
         }
 
-        let (ws, _) = connect_async(self.ws_url()).await.context("binance connect failed")?;
+        let (ws, _) = connect_async(self.ws_url())
+            .await
+            .context("binance connect failed")?;
         let (mut sink, mut stream) = ws.split();
         let mut ping_tick = interval(Duration::from_secs(15));
         let mut last_pong = Instant::now();

@@ -91,17 +91,23 @@ pub fn build_sources(cfg: &AppConfig) -> Vec<Arc<dyn ExchangeSource>> {
             }
             "binance" => {
                 if !spot_symbols.is_empty() {
-                    out.push(Arc::new(BinanceBookTicker::new(spot_symbols.iter().map(|s| to_binance(s)).collect())));
+                    out.push(Arc::new(BinanceBookTicker::new(
+                        spot_symbols.iter().map(|s| to_binance(s)).collect(),
+                    )));
                 }
             }
             "htx" => {
                 if !spot_symbols.is_empty() {
-                    out.push(Arc::new(HtxBbo::new(spot_symbols.iter().map(|s| to_binance(s)).collect())));
+                    out.push(Arc::new(HtxBbo::new(
+                        spot_symbols.iter().map(|s| to_binance(s)).collect(),
+                    )));
                 }
             }
             "bitfinex" => {
                 if !spot_symbols.is_empty() {
-                    out.push(Arc::new(BitfinexTicker::new(spot_symbols.iter().map(|s| to_bitfinex(s)).collect())));
+                    out.push(Arc::new(BitfinexTicker::new(
+                        spot_symbols.iter().map(|s| to_bitfinex(s)).collect(),
+                    )));
                 }
             }
             _ => {}

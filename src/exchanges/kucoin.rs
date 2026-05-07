@@ -16,7 +16,9 @@ pub struct KucoinTicker {
     pub symbols: Vec<String>,
 }
 impl KucoinTicker {
-    pub fn new(symbols: Vec<String>) -> Self { Self { symbols } }
+    pub fn new(symbols: Vec<String>) -> Self {
+        Self { symbols }
+    }
 }
 
 #[derive(Deserialize)]
@@ -54,7 +56,9 @@ struct KuTickData {
 
 #[async_trait]
 impl ExchangeSource for KucoinTicker {
-    fn name(&self) -> &'static str { "kucoin" }
+    fn name(&self) -> &'static str {
+        "kucoin"
+    }
 
     async fn run(&self, ctx: SourceContext) -> Result<()> {
         if self.symbols.is_empty() {
@@ -83,13 +87,18 @@ impl ExchangeSource for KucoinTicker {
 
         for (i, s) in self.symbols.iter().enumerate() {
             let topic = format!("/market/ticker:{}", s);
-            sink.send(Message::Text(json!({
-                "id": format!("sub-{}", i),
-                "type":"subscribe",
-                "topic": topic,
-                "privateChannel": false,
-                "response": true
-            }).to_string().into())).await?;
+            sink.send(Message::Text(
+                json!({
+                    "id": format!("sub-{}", i),
+                    "type":"subscribe",
+                    "topic": topic,
+                    "privateChannel": false,
+                    "response": true
+                })
+                .to_string()
+                .into(),
+            ))
+            .await?;
         }
 
         let mut ping_tick = interval(Duration::from_secs(20));

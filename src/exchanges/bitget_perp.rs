@@ -16,7 +16,9 @@ pub struct BitgetPerpTicker {
     pub symbols: Vec<String>,
 }
 impl BitgetPerpTicker {
-    pub fn new(symbols: Vec<String>) -> Self { Self { symbols } }
+    pub fn new(symbols: Vec<String>) -> Self {
+        Self { symbols }
+    }
 }
 
 #[derive(Deserialize)]
@@ -53,7 +55,9 @@ struct BitgetTick {
 
 #[async_trait]
 impl ExchangeSource for BitgetPerpTicker {
-    fn name(&self) -> &'static str { "bitget" }
+    fn name(&self) -> &'static str {
+        "bitget"
+    }
 
     async fn run(&self, ctx: SourceContext) -> Result<()> {
         if self.symbols.is_empty() {
@@ -68,7 +72,10 @@ impl ExchangeSource for BitgetPerpTicker {
             .iter()
             .map(|s| json!({"instType":"USDT-FUTURES","channel":"ticker","instId":s}))
             .collect::<Vec<_>>();
-        sink.send(Message::Text(json!({"op":"subscribe","args":args}).to_string().into())).await?;
+        sink.send(Message::Text(
+            json!({"op":"subscribe","args":args}).to_string().into(),
+        ))
+        .await?;
 
         let mut ping_tick = interval(Duration::from_secs(25));
         let mut last_seen = Instant::now();

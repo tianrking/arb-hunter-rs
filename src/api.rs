@@ -26,7 +26,10 @@ pub fn build_router(state: ApiState) -> Router {
         .route("/health", get(health))
         .route("/snapshot", get(snapshot))
         .route("/metrics", get(metrics))
-        .route("/", get(|| async { Json(serde_json::json!({"service":"arb-hunter-rs"})) }))
+        .route(
+            "/",
+            get(|| async { Json(serde_json::json!({"service":"arb-hunter-rs"})) }),
+        )
         .with_state(Arc::new(state))
 }
 
@@ -72,7 +75,12 @@ async fn ws_ticks(
     ws.on_upgrade(move |socket| ws_loop(socket, bus, q, metrics))
 }
 
-async fn ws_loop(mut socket: WebSocket, bus: EventBus, q: TickFilterQuery, metrics: Arc<AppMetrics>) {
+async fn ws_loop(
+    mut socket: WebSocket,
+    bus: EventBus,
+    q: TickFilterQuery,
+    metrics: Arc<AppMetrics>,
+) {
     metrics.ws_subscribers.inc();
 
     let mut rx = bus.subscribe();
@@ -142,15 +150,18 @@ impl TickFilter {
 
     fn matches(&self, t: &NormalizedTick) -> bool {
         if let Some(symbols) = &self.symbols
-            && !symbols.contains(&t.symbol.to_ascii_uppercase()) {
+            && !symbols.contains(&t.symbol.to_ascii_uppercase())
+        {
             return false;
         }
         if let Some(exchanges) = &self.exchanges
-            && !exchanges.contains(&t.exchange.to_ascii_lowercase()) {
+            && !exchanges.contains(&t.exchange.to_ascii_lowercase())
+        {
             return false;
         }
         if let Some(market) = &self.market
-            && t.market != market {
+            && t.market != market
+        {
             return false;
         }
         true

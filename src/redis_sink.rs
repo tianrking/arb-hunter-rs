@@ -47,11 +47,16 @@ pub fn spawn_redis_sink(
                         let res: redis::RedisResult<String> = redis::cmd("XADD")
                             .arg(&stream)
                             .arg("*")
-                            .arg("exchange").arg(t.exchange)
-                            .arg("market").arg(t.market)
-                            .arg("symbol").arg(&t.symbol)
-                            .arg("ts").arg(t.ts as i64)
-                            .arg("payload").arg(&payload)
+                            .arg("exchange")
+                            .arg(t.exchange)
+                            .arg("market")
+                            .arg(t.market)
+                            .arg("symbol")
+                            .arg(&t.symbol)
+                            .arg("ts")
+                            .arg(t.ts as i64)
+                            .arg("payload")
+                            .arg(&payload)
                             .query_async(&mut conn)
                             .await;
                         match res {
@@ -77,7 +82,7 @@ pub fn spawn_redis_sink(
                     }
                 }
                 Err(tokio::sync::broadcast::error::RecvError::Lagged(n)) => {
-                    warn!(skipped=n, "redis sink lagged");
+                    warn!(skipped = n, "redis sink lagged");
                 }
                 Err(tokio::sync::broadcast::error::RecvError::Closed) => break,
             }

@@ -15,7 +15,9 @@ pub struct OkxPerpTicker {
     pub inst_ids: Vec<String>,
 }
 impl OkxPerpTicker {
-    pub fn new(inst_ids: Vec<String>) -> Self { Self { inst_ids } }
+    pub fn new(inst_ids: Vec<String>) -> Self {
+        Self { inst_ids }
+    }
 }
 
 #[derive(Serialize)]
@@ -56,7 +58,9 @@ struct Tick<'a> {
 
 #[async_trait]
 impl ExchangeSource for OkxPerpTicker {
-    fn name(&self) -> &'static str { "okx" }
+    fn name(&self) -> &'static str {
+        "okx"
+    }
 
     async fn run(&self, ctx: SourceContext) -> Result<()> {
         if self.inst_ids.is_empty() {

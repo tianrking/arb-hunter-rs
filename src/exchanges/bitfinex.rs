@@ -16,12 +16,16 @@ pub struct BitfinexTicker {
     pub symbols: Vec<String>,
 }
 impl BitfinexTicker {
-    pub fn new(symbols: Vec<String>) -> Self { Self { symbols } }
+    pub fn new(symbols: Vec<String>) -> Self {
+        Self { symbols }
+    }
 }
 
 #[async_trait]
 impl ExchangeSource for BitfinexTicker {
-    fn name(&self) -> &'static str { "bitfinex" }
+    fn name(&self) -> &'static str {
+        "bitfinex"
+    }
 
     async fn run(&self, ctx: SourceContext) -> Result<()> {
         if self.symbols.is_empty() {
@@ -32,7 +36,12 @@ impl ExchangeSource for BitfinexTicker {
         let (mut sink, mut stream) = ws.split();
 
         for sym in &self.symbols {
-            sink.send(Message::Text(json!({"event":"subscribe","channel":"ticker","symbol":sym}).to_string().into())).await?;
+            sink.send(Message::Text(
+                json!({"event":"subscribe","channel":"ticker","symbol":sym})
+                    .to_string()
+                    .into(),
+            ))
+            .await?;
         }
 
         let mut chan_map: HashMap<i64, String> = HashMap::new();

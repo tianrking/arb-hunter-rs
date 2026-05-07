@@ -17,12 +17,16 @@ pub struct HtxBbo {
     pub symbols: Vec<String>,
 }
 impl HtxBbo {
-    pub fn new(symbols: Vec<String>) -> Self { Self { symbols } }
+    pub fn new(symbols: Vec<String>) -> Self {
+        Self { symbols }
+    }
 }
 
 #[async_trait]
 impl ExchangeSource for HtxBbo {
-    fn name(&self) -> &'static str { "htx" }
+    fn name(&self) -> &'static str {
+        "htx"
+    }
 
     async fn run(&self, ctx: SourceContext) -> Result<()> {
         if self.symbols.is_empty() {
@@ -34,7 +38,10 @@ impl ExchangeSource for HtxBbo {
 
         for s in &self.symbols {
             let ch = format!("market.{}.bbo", s.to_ascii_lowercase());
-            sink.send(Message::Text(json!({"sub": ch, "id": s}).to_string().into())).await?;
+            sink.send(Message::Text(
+                json!({"sub": ch, "id": s}).to_string().into(),
+            ))
+            .await?;
         }
 
         let mut ping_tick = interval(Duration::from_secs(20));

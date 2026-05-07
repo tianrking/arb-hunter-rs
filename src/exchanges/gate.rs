@@ -16,7 +16,9 @@ pub struct GateSpotBookTicker {
     pub symbols: Vec<String>,
 }
 impl GateSpotBookTicker {
-    pub fn new(symbols: Vec<String>) -> Self { Self { symbols } }
+    pub fn new(symbols: Vec<String>) -> Self {
+        Self { symbols }
+    }
 }
 
 #[derive(Deserialize)]
@@ -39,7 +41,9 @@ struct GateResult {
 
 #[async_trait]
 impl ExchangeSource for GateSpotBookTicker {
-    fn name(&self) -> &'static str { "gate" }
+    fn name(&self) -> &'static str {
+        "gate"
+    }
 
     async fn run(&self, ctx: SourceContext) -> Result<()> {
         if self.symbols.is_empty() {
@@ -48,12 +52,17 @@ impl ExchangeSource for GateSpotBookTicker {
 
         let (ws, _) = connect_async("wss://api.gateio.ws/ws/v4/").await?;
         let (mut sink, mut stream) = ws.split();
-        sink.send(Message::Text(json!({
-            "time": now_ms()/1000,
-            "channel": "spot.book_ticker",
-            "event": "subscribe",
-            "payload": self.symbols
-        }).to_string().into())).await?;
+        sink.send(Message::Text(
+            json!({
+                "time": now_ms()/1000,
+                "channel": "spot.book_ticker",
+                "event": "subscribe",
+                "payload": self.symbols
+            })
+            .to_string()
+            .into(),
+        ))
+        .await?;
 
         let mut ping_tick = interval(Duration::from_secs(20));
         let mut last_seen = Instant::now();

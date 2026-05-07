@@ -80,7 +80,12 @@ impl SpreadAggregator {
         let key = normalize_symbol(&tick.symbol, tick.market);
         let ex = tick.exchange;
         self.books.entry(key.clone()).or_default().insert(ex, tick);
-        *self.tick_counts.entry(key).or_default().entry(ex).or_default() += 1;
+        *self
+            .tick_counts
+            .entry(key)
+            .or_default()
+            .entry(ex)
+            .or_default() += 1;
     }
 
     fn report_once(&mut self) {
@@ -201,7 +206,9 @@ fn normalize_symbol(symbol: &str, market: MarketKind) -> Box<str> {
     out.into_boxed_str()
 }
 
-fn best_cross_pair(active: &[(&'static str, &MarketTick)]) -> Option<(&'static str, f64, &'static str, f64)> {
+fn best_cross_pair(
+    active: &[(&'static str, &MarketTick)],
+) -> Option<(&'static str, f64, &'static str, f64)> {
     let mut best_pair: Option<(&'static str, f64, &'static str, f64)> = None;
     for (buy_ex, buy_t) in active {
         for (sell_ex, sell_t) in active {
@@ -225,14 +232,22 @@ fn compute_profit(
     slippage_bps_single_leg: f64,
 ) -> ProfitBreakdown {
     let gross = bid - ask;
-    let gross_bps = if ask > 0.0 { gross / ask * 10_000.0 } else { 0.0 };
+    let gross_bps = if ask > 0.0 {
+        gross / ask * 10_000.0
+    } else {
+        0.0
+    };
     let fee_bps_total = buy_fee_bps + sell_fee_bps;
     let slippage_bps_total = slippage_bps_single_leg * 2.0;
     let buy_fee = ask * buy_fee_bps / 10_000.0;
     let sell_fee = bid * sell_fee_bps / 10_000.0;
     let slip = ((ask + bid) / 2.0) * slippage_bps_total / 10_000.0;
     let net = gross - buy_fee - sell_fee - slip;
-    let net_bps = if ask > 0.0 { (net / ask) * 10_000.0 } else { 0.0 };
+    let net_bps = if ask > 0.0 {
+        (net / ask) * 10_000.0
+    } else {
+        0.0
+    };
     ProfitBreakdown {
         gross,
         gross_bps,
