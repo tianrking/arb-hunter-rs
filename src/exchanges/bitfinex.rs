@@ -1,8 +1,8 @@
+use async_trait::async_trait;
 use std::collections::HashMap;
 use std::time::Duration;
 
 use anyhow::{Context, Result};
-use async_trait::async_trait;
 use futures_util::{SinkExt, StreamExt};
 use serde_json::json;
 use tokio::time::{Instant, interval};

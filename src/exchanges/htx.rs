@@ -1,8 +1,8 @@
+use async_trait::async_trait;
 use std::io::{Cursor, Read};
 use std::time::Duration;
 
 use anyhow::{Context, Result};
-use async_trait::async_trait;
 use flate2::read::GzDecoder;
 use futures_util::{SinkExt, StreamExt};
 use serde_json::{Value, json};
