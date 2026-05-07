@@ -4,16 +4,22 @@ use crate::config::AppConfig;
 use crate::source::ExchangeSource;
 
 use super::binance::BinanceBookTicker;
+use super::binance_perp::BinancePerpBookTicker;
 use super::bitfinex::BitfinexTicker;
+use super::bitfinex_perp::BitfinexPerpTicker;
 use super::bitget::BitgetSpotTicker;
 use super::bitget_perp::BitgetPerpTicker;
 use super::bybit::BybitSpotTicker;
 use super::bybit_perp::BybitPerpTicker;
 use super::coinbase::CoinbaseTicker;
 use super::gate::GateSpotBookTicker;
+use super::gate_perp::GatePerpBookTicker;
 use super::htx::HtxBbo;
+use super::htx_perp::HtxPerpBbo;
 use super::kraken::KrakenTicker;
+use super::kraken_perp::KrakenPerpTicker;
 use super::kucoin::KucoinTicker;
+use super::kucoin_perp::KucoinPerpTicker;
 use super::okx::OkxTicker;
 use super::okx_perp::OkxPerpTicker;
 
@@ -74,11 +80,21 @@ pub fn build_sources(cfg: &AppConfig) -> Vec<Arc<dyn ExchangeSource>> {
                         spot_symbols.iter().map(|s| to_slash(s)).collect(),
                     )));
                 }
+                if !perp_symbols.is_empty() {
+                    out.push(Arc::new(KrakenPerpTicker::new(
+                        perp_symbols.iter().map(|s| to_kraken_perp(s)).collect(),
+                    )));
+                }
             }
             "kucoin" => {
                 if !spot_symbols.is_empty() {
                     out.push(Arc::new(KucoinTicker::new(
                         spot_symbols.iter().map(|s| to_dash(s)).collect(),
+                    )));
+                }
+                if !perp_symbols.is_empty() {
+                    out.push(Arc::new(KucoinPerpTicker::new(
+                        perp_symbols.iter().map(|s| to_kucoin_perp(s)).collect(),
                     )));
                 }
             }
@@ -88,11 +104,21 @@ pub fn build_sources(cfg: &AppConfig) -> Vec<Arc<dyn ExchangeSource>> {
                         spot_symbols.iter().map(|s| to_underscore(s)).collect(),
                     )));
                 }
+                if !perp_symbols.is_empty() {
+                    out.push(Arc::new(GatePerpBookTicker::new(
+                        perp_symbols.iter().map(|s| to_underscore(s)).collect(),
+                    )));
+                }
             }
             "binance" => {
                 if !spot_symbols.is_empty() {
                     out.push(Arc::new(BinanceBookTicker::new(
                         spot_symbols.iter().map(|s| to_binance(s)).collect(),
+                    )));
+                }
+                if !perp_symbols.is_empty() {
+                    out.push(Arc::new(BinancePerpBookTicker::new(
+                        perp_symbols.iter().map(|s| to_binance(s)).collect(),
                     )));
                 }
             }
@@ -102,11 +128,21 @@ pub fn build_sources(cfg: &AppConfig) -> Vec<Arc<dyn ExchangeSource>> {
                         spot_symbols.iter().map(|s| to_binance(s)).collect(),
                     )));
                 }
+                if !perp_symbols.is_empty() {
+                    out.push(Arc::new(HtxPerpBbo::new(
+                        perp_symbols.iter().map(|s| to_htx_perp(s)).collect(),
+                    )));
+                }
             }
             "bitfinex" => {
                 if !spot_symbols.is_empty() {
                     out.push(Arc::new(BitfinexTicker::new(
                         spot_symbols.iter().map(|s| to_bitfinex(s)).collect(),
+                    )));
+                }
+                if !perp_symbols.is_empty() {
+                    out.push(Arc::new(BitfinexPerpTicker::new(
+                        perp_symbols.iter().map(|s| to_bitfinex_perp(s)).collect(),
                     )));
                 }
             }
@@ -155,6 +191,20 @@ fn to_bitfinex(s: &str) -> String {
     let (b, q) = split_quote(s);
     format!("t{}{}", b, q)
 }
+fn to_kucoin_perp(s: &str) -> String {
+    format!("{}M", s)
+}
+fn to_htx_perp(s: &str) -> String {
+    to_dash(s)
+}
+fn to_bitfinex_perp(s: &str) -> String {
+    let (b, q) = split_quote(s);
+    format!("t{}F0:{}F0", b, q)
+}
+fn to_kraken_perp(s: &str) -> String {
+    // Kraken futures symbols vary across venues; pass through for user override compatibility.
+    s.to_string()
+}
 
 #[cfg(test)]
 mod tests {
@@ -167,5 +217,8 @@ mod tests {
         assert_eq!(to_underscore("BTCUSDT"), "BTC_USDT");
         assert_eq!(to_slash("ETHUSDT"), "ETH/USDT");
         assert_eq!(to_bitfinex("BTCUSDT"), "tBTCUSDT");
+        assert_eq!(to_kucoin_perp("BTCUSDT"), "BTCUSDTM");
+        assert_eq!(to_htx_perp("BTCUSDT"), "BTC-USDT");
+        assert_eq!(to_bitfinex_perp("BTCUSDT"), "tBTCF0:USDTF0");
     }
 }

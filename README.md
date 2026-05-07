@@ -33,19 +33,28 @@ flowchart LR
 ## Connection Model Matrix
 
 | Exchange | Spot model | Perp model (this project) | Official perp support | Notes |
-|---|---|---|---|
-| Binance | Single WS, multi-symbol combined stream | Not implemented | Yes | `.../stream?streams=` |
+|---|---|---|---|---|
+| Binance | Single WS, multi-symbol combined stream | Single WS, multi-symbol combined stream | Yes | Spot `stream.binance.com`, Perp `fstream.binance.com` |
 | OKX | Single WS, multi-symbol subscribe | Single WS, multi-symbol subscribe | Yes | `tickers` + `-SWAP` mapping |
 | Bybit | Single WS, multi-symbol subscribe | Single WS, multi-symbol subscribe | Yes | v5 `spot` / `linear` |
 | Bitget | Single WS, multi-symbol subscribe | Single WS, multi-symbol subscribe | Yes | v2 public WS |
-| KuCoin | Single WS, multi-topic subscribe | Not implemented | Yes | tokenized endpoint |
-| Gate | Single WS, multi-symbol subscribe | Not implemented | Yes | v4 `spot.book_ticker` |
+| KuCoin | Single WS, multi-topic subscribe | Single WS, multi-topic subscribe | Yes | tokenized endpoint; perp uses `api-futures` bullet token |
+| Gate | Single WS, multi-symbol subscribe | Single WS, multi-symbol subscribe | Yes | spot/perp use different ws domains |
 | Coinbase | Single WS, multi-product subscribe | Not implemented | Limited/varies by product line | advanced trade ticker |
-| Kraken | Single WS, multi-symbol subscribe | Not implemented | Yes (derivatives endpoints differ) | ws v2 ticker |
-| HTX | Single WS, multi-channel subscribe | Not implemented | Yes | gzip binary payload |
-| Bitfinex | Single WS, multi-subscribe channels | Not implemented | Yes | `chanId -> symbol` map |
+| Kraken | Single WS, multi-symbol subscribe | Single WS, multi-symbol subscribe | Yes (derivatives endpoints differ) | ws v2 ticker; perp symbol naming must match venue |
+| HTX | Single WS, multi-channel subscribe | Single WS, multi-channel subscribe | Yes | gzip binary payload |
+| Bitfinex | Single WS, multi-subscribe channels | Single WS, multi-subscribe channels | Yes | `chanId -> symbol` map |
 
-Perp adapters currently enabled in code: `okx_perp`, `bybit_perp`, `bitget_perp`.
+Perp adapters currently enabled in code: `okx_perp`, `bybit_perp`, `bitget_perp`, `binance_perp`, `kucoin_perp`, `gate_perp`, `kraken_perp`, `htx_perp`, `bitfinex_perp`.
+
+Perp symbol conversion defaults in registry:
+
+- Binance / Bybit / Bitget: `BTCUSDT`
+- OKX / HTX: `BTC-USDT-SWAP` (OKX) / `BTC-USDT` (HTX)
+- KuCoin Perp: `BTCUSDTM`
+- Gate Perp: `BTC_USDT`
+- Bitfinex Perp: `tBTCF0:USDTF0`
+- Kraken Perp: pass-through (`perp_symbols` should be configured as exact venue symbols)
 
 ## Signal Fields
 
