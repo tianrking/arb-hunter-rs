@@ -30,7 +30,6 @@ dependencies = [
  "anyhow",
  "async-trait",
  "axum",
- "bytes",
  "flate2",
  "futures-util",
  "prometheus",

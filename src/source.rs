@@ -2,12 +2,14 @@ use anyhow::Result;
 use async_trait::async_trait;
 use tokio::sync::mpsc;
 
+use crate::metrics::AppMetrics;
 use crate::types::{BackpressureMode, DataEvent};
 
 #[derive(Clone)]
 pub struct SourceContext {
     pub tx: mpsc::Sender<DataEvent>,
     pub backpressure: BackpressureMode,
+    pub metrics: std::sync::Arc<AppMetrics>,
 }
 
 impl SourceContext {
@@ -17,7 +19,9 @@ impl SourceContext {
                 self.tx.send(ev).await?;
             }
             BackpressureMode::DropNewest => {
-                let _ = self.tx.try_send(ev);
+                if self.tx.try_send(ev).is_err() {
+                    self.metrics.ticks_dropped_total.inc();
+                }
             }
         }
         Ok(())

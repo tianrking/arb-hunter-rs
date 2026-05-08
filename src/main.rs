@@ -33,7 +33,8 @@ async fn main() -> anyhow::Result<()> {
         .init();
 
     let cfg = AppConfig::load()?;
-    let runtime = SourceRuntime::new(cfg.runtime.queue_capacity, cfg.backpressure_mode());
+    let metrics = AppMetrics::new();
+    let runtime = SourceRuntime::new(cfg.runtime.queue_capacity, cfg.backpressure_mode(), metrics.clone());
     let sources = build_sources(&cfg);
 
     let handle = runtime.spawn_sources(sources);
@@ -41,7 +42,6 @@ async fn main() -> anyhow::Result<()> {
     let mut tasks = handle.tasks;
 
     let bus = EventBus::new(8192, cfg.runtime.stale_ttl_ms);
-    let metrics = AppMetrics::new();
 
     let api_router = build_router(ApiState {
         bus: bus.clone(),

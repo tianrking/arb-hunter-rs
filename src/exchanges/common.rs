@@ -48,3 +48,30 @@ pub async fn emit_tick_ext(
     }
     Ok(())
 }
+
+pub async fn emit_tick_f64(
+    ctx: &SourceContext,
+    exchange: &'static str,
+    market: MarketKind,
+    symbol: &str,
+    bid: f64,
+    ask: f64,
+    mark: Option<f64>,
+    funding_rate: Option<f64>,
+    source_ts_ms: Option<u64>,
+) -> Result<()> {
+    if bid > 0.0 && ask > 0.0 && bid.is_finite() && ask.is_finite() {
+        let tick = MarketTick {
+            exchange,
+            market,
+            symbol: symbol.to_string().into_boxed_str(),
+            bid,
+            ask,
+            mark,
+            funding_rate,
+            ts_ms: source_ts_ms.unwrap_or_else(now_ms),
+        };
+        ctx.emit(DataEvent::Tick(tick)).await?;
+    }
+    Ok(())
+}

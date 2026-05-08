@@ -9,6 +9,7 @@ pub struct AppMetrics {
     pub bus_publish_total: IntCounter,
     pub ws_subscribers: IntGauge,
     pub redis_xadd_total: IntCounter,
+    pub ticks_dropped_total: IntCounter,
 }
 
 impl AppMetrics {
@@ -26,6 +27,8 @@ impl AppMetrics {
             IntGauge::new("ws_subscribers", "Current websocket subscribers").unwrap();
         let redis_xadd_total =
             IntCounter::new("redis_xadd_total", "Total redis xadd writes").unwrap();
+        let ticks_dropped_total =
+            IntCounter::new("ticks_dropped_total", "Total ticks dropped by backpressure").unwrap();
 
         registry
             .register(Box::new(ticks_ingested_total.clone()))
@@ -37,6 +40,9 @@ impl AppMetrics {
         registry
             .register(Box::new(redis_xadd_total.clone()))
             .unwrap();
+        registry
+            .register(Box::new(ticks_dropped_total.clone()))
+            .unwrap();
 
         Arc::new(Self {
             registry,
@@ -44,6 +50,7 @@ impl AppMetrics {
             bus_publish_total,
             ws_subscribers,
             redis_xadd_total,
+            ticks_dropped_total,
         })
     }
 

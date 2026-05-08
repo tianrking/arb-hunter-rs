@@ -7,6 +7,7 @@ use tokio::time::sleep;
 use tokio_util::sync::CancellationToken;
 use tracing::{error, info, warn};
 
+use crate::metrics::AppMetrics;
 use crate::source::{ExchangeSource, SourceContext};
 use crate::types::{BackpressureMode, DataEvent};
 
@@ -20,14 +21,16 @@ pub struct SourceRuntime {
     pub queue_capacity: usize,
     pub backpressure: BackpressureMode,
     pub max_backoff: Duration,
+    pub metrics: Arc<AppMetrics>,
 }
 
 impl SourceRuntime {
-    pub fn new(queue_capacity: usize, backpressure: BackpressureMode) -> Self {
+    pub fn new(queue_capacity: usize, backpressure: BackpressureMode, metrics: Arc<AppMetrics>) -> Self {
         Self {
             queue_capacity,
             backpressure,
             max_backoff: Duration::from_secs(30),
+            metrics,
         }
     }
 
@@ -40,6 +43,7 @@ impl SourceRuntime {
             let ctx = SourceContext {
                 tx: tx.clone(),
                 backpressure: self.backpressure,
+                metrics: self.metrics.clone(),
             };
             let max_backoff = self.max_backoff;
             let stop = shutdown.clone();
@@ -56,7 +60,7 @@ impl SourceRuntime {
                     let source_run = source.clone();
                     let mut run_task = tokio::spawn(async move { source_run.run(run_ctx).await });
 
-                    tokio::select! {
+                    let ran_ok = tokio::select! {
                         _ = stop.cancelled() => {
                             run_task.abort();
                             let _ = run_task.await;
@@ -64,17 +68,31 @@ impl SourceRuntime {
                         }
                         join = &mut run_task => {
                             match join {
-                                Ok(Ok(())) => warn!(exchange = source.name(), "source exited normally, reconnecting"),
-                                Ok(Err(e)) => error!(exchange = source.name(), error = %e, "source error"),
-                                Err(e) => error!(exchange = source.name(), error = %e, "source task panicked"),
+                                Ok(Ok(())) => {
+                                    warn!(exchange = source.name(), "source exited normally, reconnecting");
+                                    true
+                                }
+                                Ok(Err(e)) => {
+                                    error!(exchange = source.name(), error = %e, "source error");
+                                    false
+                                }
+                                Err(e) => {
+                                    error!(exchange = source.name(), error = %e, "source task panicked");
+                                    false
+                                }
                             }
                         }
+                    };
+
+                    if ran_ok {
+                        delay = Duration::from_secs(1);
                     }
 
                     tokio::select! {
                         _ = stop.cancelled() => break,
                         _ = sleep(delay) => {}
                     }
+
                     delay = (delay * 2).min(max_backoff);
                 }
             });
