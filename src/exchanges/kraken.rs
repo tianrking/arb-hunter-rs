@@ -42,8 +42,18 @@ struct KData {
 
 // ── Shared run loop ───────────────────────────────────────────────────
 
-pub async fn run_kraken(url: &str, exchange: &'static str, market: MarketKind, symbols: &[String], ctx: SourceContext) -> Result<()> {
-    let label = if market == MarketKind::Spot { "spot" } else { "perp" };
+pub async fn run_kraken(
+    url: &str,
+    exchange: &'static str,
+    market: MarketKind,
+    symbols: &[String],
+    ctx: SourceContext,
+) -> Result<()> {
+    let label = if market == MarketKind::Spot {
+        "spot"
+    } else {
+        "perp"
+    };
     if symbols.is_empty() {
         anyhow::bail!("kraken {label} symbols empty");
     }
@@ -51,8 +61,11 @@ pub async fn run_kraken(url: &str, exchange: &'static str, market: MarketKind, s
     let (ws, _) = connect_async(url).await?;
     let (mut sink, mut stream) = ws.split();
     sink.send(Message::Text(
-        json!({"method":"subscribe","params":{"channel":"ticker","symbol":symbols}}).to_string().into(),
-    )).await?;
+        json!({"method":"subscribe","params":{"channel":"ticker","symbol":symbols}})
+            .to_string()
+            .into(),
+    ))
+    .await?;
 
     let mut ping_tick = interval(Duration::from_secs(20));
     let mut last_pong = Instant::now();
@@ -113,13 +126,24 @@ pub struct KrakenTicker {
     pub symbols: Vec<String>,
 }
 impl KrakenTicker {
-    pub fn new(symbols: Vec<String>) -> Self { Self { symbols } }
+    pub fn new(symbols: Vec<String>) -> Self {
+        Self { symbols }
+    }
 }
 
 #[async_trait]
 impl ExchangeSource for KrakenTicker {
-    fn name(&self) -> &'static str { "kraken" }
+    fn name(&self) -> &'static str {
+        "kraken"
+    }
     async fn run(&self, ctx: SourceContext) -> Result<()> {
-        run_kraken("wss://ws.kraken.com/v2", self.name(), MarketKind::Spot, &self.symbols, ctx).await
+        run_kraken(
+            "wss://ws.kraken.com/v2",
+            self.name(),
+            MarketKind::Spot,
+            &self.symbols,
+            ctx,
+        )
+        .await
     }
 }

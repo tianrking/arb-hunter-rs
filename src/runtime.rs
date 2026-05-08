@@ -25,7 +25,11 @@ pub struct SourceRuntime {
 }
 
 impl SourceRuntime {
-    pub fn new(queue_capacity: usize, backpressure: BackpressureMode, metrics: Arc<AppMetrics>) -> Self {
+    pub fn new(
+        queue_capacity: usize,
+        backpressure: BackpressureMode,
+        metrics: Arc<AppMetrics>,
+    ) -> Self {
         Self {
             queue_capacity,
             backpressure,

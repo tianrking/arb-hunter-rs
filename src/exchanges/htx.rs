@@ -15,8 +15,18 @@ use crate::types::{DataEvent, MarketKind, now_ms};
 
 // ── Shared run loop ───────────────────────────────────────────────────
 
-pub async fn run_htx(url: &str, exchange: &'static str, market: MarketKind, symbols: &[String], ctx: SourceContext) -> Result<()> {
-    let label = if market == MarketKind::Spot { "spot" } else { "perp" };
+pub async fn run_htx(
+    url: &str,
+    exchange: &'static str,
+    market: MarketKind,
+    symbols: &[String],
+    ctx: SourceContext,
+) -> Result<()> {
+    let label = if market == MarketKind::Spot {
+        "spot"
+    } else {
+        "perp"
+    };
     if symbols.is_empty() {
         anyhow::bail!("htx {label} symbols empty");
     }
@@ -26,7 +36,10 @@ pub async fn run_htx(url: &str, exchange: &'static str, market: MarketKind, symb
 
     for s in symbols {
         let ch = format!("market.{}.bbo", s.to_ascii_lowercase());
-        sink.send(Message::Text(json!({"sub": ch, "id": s}).to_string().into())).await?;
+        sink.send(Message::Text(
+            json!({"sub": ch, "id": s}).to_string().into(),
+        ))
+        .await?;
     }
 
     let mut ping_tick = interval(Duration::from_secs(20));
@@ -79,13 +92,24 @@ pub struct HtxBbo {
     pub symbols: Vec<String>,
 }
 impl HtxBbo {
-    pub fn new(symbols: Vec<String>) -> Self { Self { symbols } }
+    pub fn new(symbols: Vec<String>) -> Self {
+        Self { symbols }
+    }
 }
 
 #[async_trait]
 impl ExchangeSource for HtxBbo {
-    fn name(&self) -> &'static str { "htx" }
+    fn name(&self) -> &'static str {
+        "htx"
+    }
     async fn run(&self, ctx: SourceContext) -> Result<()> {
-        run_htx("wss://api.huobi.pro/ws", self.name(), MarketKind::Spot, &self.symbols, ctx).await
+        run_htx(
+            "wss://api.huobi.pro/ws",
+            self.name(),
+            MarketKind::Spot,
+            &self.symbols,
+            ctx,
+        )
+        .await
     }
 }

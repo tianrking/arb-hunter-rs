@@ -24,8 +24,18 @@ struct BybitMsg {
     data: Option<serde_json::Value>,
 }
 
-pub async fn run_bybit(url: &str, exchange: &'static str, market: MarketKind, symbols: &[String], ctx: SourceContext) -> Result<()> {
-    let label = if market == MarketKind::Spot { "spot" } else { "perp" };
+pub async fn run_bybit(
+    url: &str,
+    exchange: &'static str,
+    market: MarketKind,
+    symbols: &[String],
+    ctx: SourceContext,
+) -> Result<()> {
+    let label = if market == MarketKind::Spot {
+        "spot"
+    } else {
+        "perp"
+    };
     if symbols.is_empty() {
         anyhow::bail!("bybit {label} symbols empty");
     }
@@ -33,8 +43,14 @@ pub async fn run_bybit(url: &str, exchange: &'static str, market: MarketKind, sy
     let (ws, _) = connect_async(url).await?;
     let (mut sink, mut stream) = ws.split();
 
-    let topics = symbols.iter().map(|s| format!("tickers.{s}")).collect::<Vec<_>>();
-    sink.send(Message::Text(json!({"op":"subscribe","args":topics}).to_string().into())).await?;
+    let topics = symbols
+        .iter()
+        .map(|s| format!("tickers.{s}"))
+        .collect::<Vec<_>>();
+    sink.send(Message::Text(
+        json!({"op":"subscribe","args":topics}).to_string().into(),
+    ))
+    .await?;
 
     let mut ping_tick = interval(Duration::from_secs(20));
     let mut last_pong = Instant::now();
@@ -90,13 +106,24 @@ pub struct BybitSpotTicker {
     pub symbols: Vec<String>,
 }
 impl BybitSpotTicker {
-    pub fn new(symbols: Vec<String>) -> Self { Self { symbols } }
+    pub fn new(symbols: Vec<String>) -> Self {
+        Self { symbols }
+    }
 }
 
 #[async_trait]
 impl ExchangeSource for BybitSpotTicker {
-    fn name(&self) -> &'static str { "bybit" }
+    fn name(&self) -> &'static str {
+        "bybit"
+    }
     async fn run(&self, ctx: SourceContext) -> Result<()> {
-        run_bybit("wss://stream.bybit.com/v5/public/spot", self.name(), MarketKind::Spot, &self.symbols, ctx).await
+        run_bybit(
+            "wss://stream.bybit.com/v5/public/spot",
+            self.name(),
+            MarketKind::Spot,
+            &self.symbols,
+            ctx,
+        )
+        .await
     }
 }

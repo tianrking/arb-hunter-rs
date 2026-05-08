@@ -34,7 +34,11 @@ async fn main() -> anyhow::Result<()> {
 
     let cfg = AppConfig::load()?;
     let metrics = AppMetrics::new();
-    let runtime = SourceRuntime::new(cfg.runtime.queue_capacity, cfg.backpressure_mode(), metrics.clone());
+    let runtime = SourceRuntime::new(
+        cfg.runtime.queue_capacity,
+        cfg.backpressure_mode(),
+        metrics.clone(),
+    );
     let sources = build_sources(&cfg);
 
     let handle = runtime.spawn_sources(sources);

@@ -18,8 +18,17 @@ impl BinancePerpBookTicker {
 
 #[async_trait]
 impl ExchangeSource for BinancePerpBookTicker {
-    fn name(&self) -> &'static str { "binance" }
+    fn name(&self) -> &'static str {
+        "binance"
+    }
     async fn run(&self, ctx: SourceContext) -> Result<()> {
-        run_binance("wss://fstream.binance.com/stream?", self.name(), MarketKind::Perp, &self.symbols, ctx).await
+        run_binance(
+            "wss://fstream.binance.com/stream?",
+            self.name(),
+            MarketKind::Perp,
+            &self.symbols,
+            ctx,
+        )
+        .await
     }
 }

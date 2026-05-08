@@ -53,8 +53,17 @@ struct Tick<'a> {
 
 // ── Shared run loop ───────────────────────────────────────────────────
 
-pub async fn run_okx(exchange: &'static str, market: MarketKind, inst_ids: &[String], ctx: SourceContext) -> Result<()> {
-    let label = if market == MarketKind::Spot { "spot" } else { "perp" };
+pub async fn run_okx(
+    exchange: &'static str,
+    market: MarketKind,
+    inst_ids: &[String],
+    ctx: SourceContext,
+) -> Result<()> {
+    let label = if market == MarketKind::Spot {
+        "spot"
+    } else {
+        "perp"
+    };
     if inst_ids.is_empty() {
         anyhow::bail!("okx {label} symbols empty");
     }
@@ -62,10 +71,17 @@ pub async fn run_okx(exchange: &'static str, market: MarketKind, inst_ids: &[Str
     let (ws, _) = connect_async("wss://ws.okx.com:8443/ws/v5/public").await?;
     let (mut sink, mut stream) = ws.split();
 
-    let args = inst_ids.iter()
-        .map(|id| SubArg { channel: "tickers", inst_id: id.as_str() })
+    let args = inst_ids
+        .iter()
+        .map(|id| SubArg {
+            channel: "tickers",
+            inst_id: id.as_str(),
+        })
         .collect::<Vec<_>>();
-    let sub = serde_json::to_string(&SubReq { op: "subscribe", args })?;
+    let sub = serde_json::to_string(&SubReq {
+        op: "subscribe",
+        args,
+    })?;
     sink.send(Message::Text(sub.into())).await?;
 
     let mut ping_tick = interval(Duration::from_secs(20));
@@ -117,12 +133,16 @@ pub struct OkxTicker {
     pub inst_ids: Vec<String>,
 }
 impl OkxTicker {
-    pub fn new(inst_ids: Vec<String>) -> Self { Self { inst_ids } }
+    pub fn new(inst_ids: Vec<String>) -> Self {
+        Self { inst_ids }
+    }
 }
 
 #[async_trait]
 impl ExchangeSource for OkxTicker {
-    fn name(&self) -> &'static str { "okx" }
+    fn name(&self) -> &'static str {
+        "okx"
+    }
     async fn run(&self, ctx: SourceContext) -> Result<()> {
         run_okx(self.name(), MarketKind::Spot, &self.inst_ids, ctx).await
     }

@@ -55,7 +55,11 @@ pub async fn run_gate(
     symbols: &[String],
     ctx: SourceContext,
 ) -> Result<()> {
-    let label = if market == MarketKind::Spot { "spot" } else { "perp" };
+    let label = if market == MarketKind::Spot {
+        "spot"
+    } else {
+        "perp"
+    };
     if symbols.is_empty() {
         anyhow::bail!("gate {label} symbols empty");
     }
@@ -64,8 +68,10 @@ pub async fn run_gate(
     let (mut sink, mut stream) = ws.split();
     sink.send(Message::Text(
         json!({"time":now_ms()/1000,"channel":channel,"event":"subscribe","payload":symbols})
-            .to_string().into(),
-    )).await?;
+            .to_string()
+            .into(),
+    ))
+    .await?;
 
     let mut ping_tick = interval(Duration::from_secs(20));
     let mut last_seen = Instant::now();
@@ -125,17 +131,26 @@ pub struct GateSpotBookTicker {
     pub symbols: Vec<String>,
 }
 impl GateSpotBookTicker {
-    pub fn new(symbols: Vec<String>) -> Self { Self { symbols } }
+    pub fn new(symbols: Vec<String>) -> Self {
+        Self { symbols }
+    }
 }
 
 #[async_trait]
 impl ExchangeSource for GateSpotBookTicker {
-    fn name(&self) -> &'static str { "gate" }
+    fn name(&self) -> &'static str {
+        "gate"
+    }
     async fn run(&self, ctx: SourceContext) -> Result<()> {
         run_gate(
             "wss://api.gateio.ws/ws/v4/",
-            "spot.book_ticker", "spot.ping",
-            self.name(), MarketKind::Spot, &self.symbols, ctx,
-        ).await
+            "spot.book_ticker",
+            "spot.ping",
+            self.name(),
+            MarketKind::Spot,
+            &self.symbols,
+            ctx,
+        )
+        .await
     }
 }

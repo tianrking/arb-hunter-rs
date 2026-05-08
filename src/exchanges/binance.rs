@@ -39,9 +39,22 @@ struct BinanceBookTickerMsg<'a> {
     ask: &'a str,
 }
 
-pub async fn run_binance(url: &str, exchange: &'static str, market: MarketKind, symbols: &[String], ctx: SourceContext) -> Result<()> {
+pub async fn run_binance(
+    url: &str,
+    exchange: &'static str,
+    market: MarketKind,
+    symbols: &[String],
+    ctx: SourceContext,
+) -> Result<()> {
     if symbols.is_empty() {
-        anyhow::bail!("binance {} symbols empty", if market == MarketKind::Spot { "spot" } else { "perp" });
+        anyhow::bail!(
+            "binance {} symbols empty",
+            if market == MarketKind::Spot {
+                "spot"
+            } else {
+                "perp"
+            }
+        );
     }
 
     let streams = symbols
@@ -51,7 +64,8 @@ pub async fn run_binance(url: &str, exchange: &'static str, market: MarketKind, 
         .join("/");
     let ws_url = format!("{url}streams={streams}");
 
-    let (ws, _) = connect_async(&ws_url).await
+    let (ws, _) = connect_async(&ws_url)
+        .await
         .with_context(|| format!("binance {} connect failed", market_label(market)))?;
     let (mut sink, mut stream) = ws.split();
     let mut ping_tick = interval(Duration::from_secs(15));
@@ -93,13 +107,25 @@ pub async fn run_binance(url: &str, exchange: &'static str, market: MarketKind, 
 }
 
 fn market_label(m: MarketKind) -> &'static str {
-    match m { MarketKind::Spot => "spot", MarketKind::Perp => "perp" }
+    match m {
+        MarketKind::Spot => "spot",
+        MarketKind::Perp => "perp",
+    }
 }
 
 #[async_trait]
 impl ExchangeSource for BinanceBookTicker {
-    fn name(&self) -> &'static str { "binance" }
+    fn name(&self) -> &'static str {
+        "binance"
+    }
     async fn run(&self, ctx: SourceContext) -> Result<()> {
-        run_binance("wss://stream.binance.com:9443/stream?", self.name(), MarketKind::Spot, &self.symbols, ctx).await
+        run_binance(
+            "wss://stream.binance.com:9443/stream?",
+            self.name(),
+            MarketKind::Spot,
+            &self.symbols,
+            ctx,
+        )
+        .await
     }
 }

@@ -10,13 +10,24 @@ pub struct BitgetPerpTicker {
     pub symbols: Vec<String>,
 }
 impl BitgetPerpTicker {
-    pub fn new(symbols: Vec<String>) -> Self { Self { symbols } }
+    pub fn new(symbols: Vec<String>) -> Self {
+        Self { symbols }
+    }
 }
 
 #[async_trait]
 impl ExchangeSource for BitgetPerpTicker {
-    fn name(&self) -> &'static str { "bitget" }
+    fn name(&self) -> &'static str {
+        "bitget"
+    }
     async fn run(&self, ctx: SourceContext) -> Result<()> {
-        run_bitget("USDT-FUTURES", self.name(), MarketKind::Perp, &self.symbols, ctx).await
+        run_bitget(
+            "USDT-FUTURES",
+            self.name(),
+            MarketKind::Perp,
+            &self.symbols,
+            ctx,
+        )
+        .await
     }
 }

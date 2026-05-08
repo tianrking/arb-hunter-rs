@@ -10,13 +10,24 @@ pub struct KrakenPerpTicker {
     pub symbols: Vec<String>,
 }
 impl KrakenPerpTicker {
-    pub fn new(symbols: Vec<String>) -> Self { Self { symbols } }
+    pub fn new(symbols: Vec<String>) -> Self {
+        Self { symbols }
+    }
 }
 
 #[async_trait]
 impl ExchangeSource for KrakenPerpTicker {
-    fn name(&self) -> &'static str { "kraken" }
+    fn name(&self) -> &'static str {
+        "kraken"
+    }
     async fn run(&self, ctx: SourceContext) -> Result<()> {
-        run_kraken("wss://ws.kraken.com/v2", self.name(), MarketKind::Perp, &self.symbols, ctx).await
+        run_kraken(
+            "wss://ws.kraken.com/v2",
+            self.name(),
+            MarketKind::Perp,
+            &self.symbols,
+            ctx,
+        )
+        .await
     }
 }

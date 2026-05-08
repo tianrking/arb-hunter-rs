@@ -10,13 +10,24 @@ pub struct BybitPerpTicker {
     pub symbols: Vec<String>,
 }
 impl BybitPerpTicker {
-    pub fn new(symbols: Vec<String>) -> Self { Self { symbols } }
+    pub fn new(symbols: Vec<String>) -> Self {
+        Self { symbols }
+    }
 }
 
 #[async_trait]
 impl ExchangeSource for BybitPerpTicker {
-    fn name(&self) -> &'static str { "bybit" }
+    fn name(&self) -> &'static str {
+        "bybit"
+    }
     async fn run(&self, ctx: SourceContext) -> Result<()> {
-        run_bybit("wss://stream.bybit.com/v5/public/linear", self.name(), MarketKind::Perp, &self.symbols, ctx).await
+        run_bybit(
+            "wss://stream.bybit.com/v5/public/linear",
+            self.name(),
+            MarketKind::Perp,
+            &self.symbols,
+            ctx,
+        )
+        .await
     }
 }

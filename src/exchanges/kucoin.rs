@@ -75,19 +75,29 @@ pub async fn run_kucoin(
     ctx: SourceContext,
     client: &reqwest::Client,
 ) -> Result<()> {
-    let label = if market == MarketKind::Spot { "spot" } else { "perp" };
+    let label = if market == MarketKind::Spot {
+        "spot"
+    } else {
+        "perp"
+    };
     if symbols.is_empty() {
         anyhow::bail!("kucoin {label} symbols empty");
     }
 
     let bullet = client
         .post(conf.bullet_url)
-        .send().await?
+        .send()
+        .await?
         .error_for_status()?
-        .json::<BulletResp>().await?;
-    let endpoint = bullet.data.instance_servers.first()
+        .json::<BulletResp>()
+        .await?;
+    let endpoint = bullet
+        .data
+        .instance_servers
+        .first()
         .context(format!("kucoin {label} no instance server"))?
-        .endpoint.clone();
+        .endpoint
+        .clone();
     let ws_url = format!("{}?token={}", endpoint, bullet.data.token);
 
     let (ws, _) = connect_async(ws_url).await?;
@@ -156,19 +166,32 @@ pub struct KucoinTicker {
 }
 impl KucoinTicker {
     pub fn new(symbols: Vec<String>) -> Self {
-        Self { symbols, client: reqwest::Client::new() }
+        Self {
+            symbols,
+            client: reqwest::Client::new(),
+        }
     }
 }
 
 #[async_trait]
 impl ExchangeSource for KucoinTicker {
-    fn name(&self) -> &'static str { "kucoin" }
+    fn name(&self) -> &'static str {
+        "kucoin"
+    }
     async fn run(&self, ctx: SourceContext) -> Result<()> {
         let conf = KucoinConf {
             bullet_url: "https://api.kucoin.com/api/v1/bullet-public",
             topic_prefix: "/market/ticker:",
             sub_id_prefix: "sub",
         };
-        run_kucoin(&conf, self.name(), MarketKind::Spot, &self.symbols, ctx, &self.client).await
+        run_kucoin(
+            &conf,
+            self.name(),
+            MarketKind::Spot,
+            &self.symbols,
+            ctx,
+            &self.client,
+        )
+        .await
     }
 }

@@ -10,12 +10,16 @@ pub struct BitfinexPerpTicker {
     pub symbols: Vec<String>,
 }
 impl BitfinexPerpTicker {
-    pub fn new(symbols: Vec<String>) -> Self { Self { symbols } }
+    pub fn new(symbols: Vec<String>) -> Self {
+        Self { symbols }
+    }
 }
 
 #[async_trait]
 impl ExchangeSource for BitfinexPerpTicker {
-    fn name(&self) -> &'static str { "bitfinex" }
+    fn name(&self) -> &'static str {
+        "bitfinex"
+    }
     async fn run(&self, ctx: SourceContext) -> Result<()> {
         run_bitfinex(self.name(), MarketKind::Perp, &self.symbols, ctx).await
     }
